@@ -2,6 +2,7 @@ import React, { useState, createContext, ReactNode } from 'react';
 import { Contract, ethers } from 'ethers';
 import useAsyncEffect from 'use-async-effect';
 import { RPS_ABI, RPS_BYTECODE, HASHER_ADDRESS, HASHER_ABI } from '../constants';
+import { formatTime } from '../utils/helpers';
 
 interface IProvider {
   children: ReactNode;
@@ -81,10 +82,6 @@ export const RpsProvider = ({ children }: IProvider) => {
 
   const deployRPS = async (data: any) => {
     try {
-      await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
-
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = new ethers.Wallet(
         '479a4b2282bb0124affadc56d6d34fef340e8bd2c87a055bcbb60a0dfe401388',
@@ -108,24 +105,28 @@ export const RpsProvider = ({ children }: IProvider) => {
 
   const getContractData = async () => {
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const rpsContract = new Contract(
-        '0xD868b925f5f4983f09605Be561aD2cdeB21089Bc',
-        RPS_ABI,
-        provider
-      );
+      if (contractAddress) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const rpsContract = new Contract(contractAddress, RPS_ABI, provider);
 
-      const player_1 = await rpsContract.j1();
-      const player_2 = await rpsContract.j1();
-      const TIMEOUT = await rpsContract.TIMEOUT();
-      const c1Hash = await rpsContract.c1Hash();
-      const c2 = await rpsContract.c2();
-      const stake = await rpsContract.stake();
-      const lastAction = await rpsContract.lastAction();
+        const player_1 = await rpsContract.j1();
+        const player_2 = await rpsContract.j2();
+        const TIMEOUT = await rpsContract.TIMEOUT();
+        const c1Hash = await rpsContract.c1Hash();
+        const c2 = await rpsContract.c2();
+        const stake = await rpsContract.stake();
+        const lastAction = await rpsContract.lastAction();
 
-      setContractData({ player_1, player_2, c1Hash, TIMEOUT, c2, stake, lastAction });
-      console.log(player_1);
-      
+        setContractData({
+          player_1,
+          player_2,
+          c1Hash,
+          timeout: formatTime((TIMEOUT._hex * 1000).toString()),
+          c2,
+          stake,
+          last_action: formatTime((lastAction._hex * 1000).toString()),
+        });
+      }
     } catch (e) {
       console.log(e);
     }
@@ -134,22 +135,24 @@ export const RpsProvider = ({ children }: IProvider) => {
   const timeout = async () => {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const rpsContract = new Contract(
-        '0xD868b925f5f4983f09605Be561aD2cdeB21089Bc',
-        RPS_ABI,
-        provider
-      );
+      const rpsContract = new Contract(contractAddress, RPS_ABI, provider);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
-      const player_1 = await rpsContract.j1();
-      const player_2 = await rpsContract.j1();
-      const TIMEOUT = await rpsContract.TIMEOUT();
-      const c1Hash = await rpsContract.c1Hash();
-      const c2 = await rpsContract.c2();
-      const stake = await rpsContract.stake();
-      const lastAction = await rpsContract.lastAction();
+  const player2Move = async (move: string) => {
+    try {
+      console.log(move);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
 
-      setContractData({ player_1, player_2, c1Hash, TIMEOUT, c2 });
-      console.log(player_1);
+      const amount = ethers.utils.formatUnits(contractData.stake._hex, 18);
+
+      const rpsContract = new ethers.Contract(contractAddress, RPS_ABI, signer);
+      await rpsContract.play(move, {
+        value: ethers.utils.parseEther(amount),
+      });
     } catch (e) {
       console.log(e);
     }
@@ -173,6 +176,7 @@ export const RpsProvider = ({ children }: IProvider) => {
         contractAddress,
         contractData,
         getContractData,
+        player2Move,
       }}
     >
       {children}

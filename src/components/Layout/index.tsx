@@ -1,17 +1,23 @@
-import React, { ReactNode, useContext } from "react";
-import { RpsContext } from "../../context";
+import React, { ReactNode, useContext } from 'react';
+import { RpsContext } from '../../context';
+import styles from './styles.module.css';
 
 const Layout = ({ children }: { children: ReactNode }) => {
   const { connectWallet, currentAccount } = useContext(RpsContext);
 
   return (
-    <div>
-      <nav>
-        {!currentAccount && <button onClick={connectWallet}>Connect</button>}
-        {currentAccount}
+    <>
+      <nav className={styles.nav}>
+        <h3>RPS Game</h3>
+        {!currentAccount ? (
+          <button onClick={connectWallet}>Connect</button>
+        ) : (
+          <span>Current Account: {currentAccount}</span>
+        )}
       </nav>
-      {children}
-    </div>
+
+      <div className={styles.layout}>{children}</div>
+    </>
   );
 };
 
