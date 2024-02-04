@@ -42,4 +42,5 @@ deploy().catch((e) => {
   process.exitCode = 1;
 });
 
+// To generate a hasher address, in the terminal, run:
 // npx hardhat run scripts/deployHasher.ts --network goerli

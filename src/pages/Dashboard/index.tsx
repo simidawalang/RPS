@@ -1,18 +1,23 @@
-import {ethers} from "ethers";
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import { ethers } from 'ethers';
+import React, { ChangeEvent, FormEvent, useContext, useState } from 'react';
+import { RpsContext } from '../../context';
+import SecureLS from 'secure-ls';
 
 const Dashboard = () => {
-  const [matchDetails, setMatchDetails] = useState<any>({
-    hash: "",
-    address: "",
-    stake: 0,
-  });
+  const { hasher, currentAccount, deployRPS } = useContext(RpsContext);
+  const ls = new SecureLS();
 
-  const [move, setMove] = useState("");
+  const [matchDetails, setMatchDetails] = useState<any>({
+    hash: '',
+    address: '',
+    stake: '0',
+  });
+  const [loading, setLoading] = useState(false);
+  const [move, setMove] = useState('0');
 
   const handleOpponentChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name !== "hash") {
+    if (name !== 'hash') {
       setMatchDetails((prev: any) => {
         return {
           ...prev,
@@ -29,8 +34,29 @@ const Dashboard = () => {
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    setLoading(true);
+    const salt = Math.round(Math.random() * 100).toString();
+    const hash = await hasher(move, salt);
+
+    // console.log('Salt:', salt);
+
+    ls.set('player-1', {
+      account: currentAccount,
+      move,
+      hash,
+      salt,
+    });
+
+    await deployRPS({
+      hash,
+      address: matchDetails.address,
+      stake: matchDetails.stake,
+    });
+
+    setLoading(false);
   };
 
   return (
@@ -51,7 +77,6 @@ const Dashboard = () => {
           <option value={5}>LIZARD</option>
         </select>
         <br />
-        hash: {matchDetails.hash}
         <input
           name="address"
           placeholder="Enter opponents address"
@@ -68,6 +93,7 @@ const Dashboard = () => {
         />
         <button>Start game</button>
       </form>
+      {loading && <div>loading</div>}
     </div>
   );
 };

@@ -1,15 +1,16 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import { config as DotenvConfig } from "dotenv";
+import { HardhatUserConfig } from 'hardhat/config';
+import '@nomicfoundation/hardhat-toolbox';
+import dotenv from 'dotenv';
 
-DotenvConfig();
+dotenv.config();
 
 const config: HardhatUserConfig = {
-  solidity: "0.4.26",
+  solidity: '0.4.26',
+  defaultNetwork: 'goerli',
   networks: {
     hardhat: {},
     goerli: {
-      url: "https://rpc.ankr.com/eth_goerli",
+      url: 'https://rpc.ankr.com/eth_goerli',
       accounts: [`0x${process.env.PRIVATE_KEY}`],
     },
   },
