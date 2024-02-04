@@ -1,5 +1,5 @@
 import React, { useState, createContext, ReactNode } from 'react';
-import { ethers } from 'ethers';
+import { Contract, ethers } from 'ethers';
 import useAsyncEffect from 'use-async-effect';
 import { RPS_ABI, RPS_BYTECODE, HASHER_ADDRESS, HASHER_ABI } from '../constants';
 
@@ -15,6 +15,7 @@ export const RpsProvider = ({ children }: IProvider) => {
   const [contractAddress, setContractAddress] = useState(
     localStorage.getItem('contract-address') || ''
   );
+  const [contractData, setContractData] = useState<any>({});
   const [isConnected, setIsConnected] = useState(false);
 
   const connectWallet = async () => {
@@ -71,7 +72,7 @@ export const RpsProvider = ({ children }: IProvider) => {
       const signer = provider.getSigner();
       const hasherContract = new ethers.Contract(HASHER_ADDRESS, HASHER_ABI, signer);
 
-      const hashResult = hasherContract.hash(move, salt);
+      const hashResult = await hasherContract.hash(move, salt);
       return hashResult;
     } catch (e) {
       console.log(e);
@@ -80,7 +81,11 @@ export const RpsProvider = ({ children }: IProvider) => {
 
   const deployRPS = async (data: any) => {
     try {
-      const provider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth_goerli');
+      await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = new ethers.Wallet(
         '479a4b2282bb0124affadc56d6d34fef340e8bd2c87a055bcbb60a0dfe401388',
         provider
@@ -94,7 +99,57 @@ export const RpsProvider = ({ children }: IProvider) => {
 
       console.log(deployedContract);
       setContractAddress(deployedContract.address);
+
       return deployedContract;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const getContractData = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const rpsContract = new Contract(
+        '0xD868b925f5f4983f09605Be561aD2cdeB21089Bc',
+        RPS_ABI,
+        provider
+      );
+
+      const player_1 = await rpsContract.j1();
+      const player_2 = await rpsContract.j1();
+      const TIMEOUT = await rpsContract.TIMEOUT();
+      const c1Hash = await rpsContract.c1Hash();
+      const c2 = await rpsContract.c2();
+      const stake = await rpsContract.stake();
+      const lastAction = await rpsContract.lastAction();
+
+      setContractData({ player_1, player_2, c1Hash, TIMEOUT, c2, stake, lastAction });
+      console.log(player_1);
+      
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const timeout = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const rpsContract = new Contract(
+        '0xD868b925f5f4983f09605Be561aD2cdeB21089Bc',
+        RPS_ABI,
+        provider
+      );
+
+      const player_1 = await rpsContract.j1();
+      const player_2 = await rpsContract.j1();
+      const TIMEOUT = await rpsContract.TIMEOUT();
+      const c1Hash = await rpsContract.c1Hash();
+      const c2 = await rpsContract.c2();
+      const stake = await rpsContract.stake();
+      const lastAction = await rpsContract.lastAction();
+
+      setContractData({ player_1, player_2, c1Hash, TIMEOUT, c2 });
+      console.log(player_1);
     } catch (e) {
       console.log(e);
     }
@@ -115,7 +170,9 @@ export const RpsProvider = ({ children }: IProvider) => {
         isConnected,
         hasher,
         deployRPS,
-        contractAddress
+        contractAddress,
+        contractData,
+        getContractData,
       }}
     >
       {children}

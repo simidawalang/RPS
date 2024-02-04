@@ -32,7 +32,7 @@ async function deploy ()  {
     const hasherContract = await Hasher.deploy();
     await hasherContract.deployed();
 
-    console.log("-- Goerli Network --")
+    console.log("-- Sepolia Network --")
     console.log(`Hasher contract deployed to ${hasherContract.address}`)
   
 };
