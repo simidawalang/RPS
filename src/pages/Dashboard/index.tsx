@@ -4,6 +4,7 @@ import { RpsContext } from '../../context';
 import SecureLS from 'secure-ls';
 import CountdownTimer from '../../components/CountdownTimer';
 import { Button, Input, Select } from '../../components';
+import useAsyncEffect from 'use-async-effect';
 
 const Dashboard = () => {
   const {
@@ -15,6 +16,7 @@ const Dashboard = () => {
     contractData,
     player2Move,
     solve,
+    setContractData,
   } = useContext(RpsContext);
   const ls = new SecureLS();
 
@@ -89,6 +91,10 @@ const Dashboard = () => {
     setUserMessage('Check your balance to see if you won, lost or had a tie');
   };
 
+  useAsyncEffect(() => {
+    getContractData(contractAddress);
+  }, [contractAddress]);
+
   return (
     <div className="grid gap-10 md:grid-cols-2">
       {currentAccount ? (
@@ -152,7 +158,13 @@ const Dashboard = () => {
                   onChange={handleOpponentChange}
                 />
 
-                <Button disabled={matchDetails.address.length === 0}>
+                <Button
+                  disabled={
+                    matchDetails.address.length === 0 ||
+                    matchDetails.address?.toLowerCase().trim() ===
+                      currentAccount?.toLowerCase().trim()
+                  }
+                >
                   {loading ? 'Loading...' : 'Start Game'}
                 </Button>
               </div>
@@ -168,14 +180,25 @@ const Dashboard = () => {
 
           {/* After player 2 has made a move, and the current address is the first player */}
           {contractData?.c2 && currentAccount === contractData?.player_1 && (
-            <Button onClick={solveGame}>Solve</Button>
+            <div>
+              <Button onClick={solveGame}>Solve</Button>
+              <Button
+                className="block mt-2"
+                onClick={() => {
+                  ls.remove('contract-address');
+                  setContractData({});
+                }}
+              >
+                Play Again
+              </Button>
+            </div>
           )}
-          {loading && userMessage && <div className="mt-4">{userMessage}</div>}
+          {userMessage && <div className="mt-4">{userMessage}</div>}
         </div>
       ) : (
         <p>Please connect your wallet</p>
       )}
-      {startCountDown && contractData.timeout && (
+      {contractData.timeout && (
         <CountdownTimer
           initialSeconds={Number(contractData.timeout)}
           startCountDown={startCountDown}

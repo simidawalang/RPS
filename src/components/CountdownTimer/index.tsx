@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { RpsContext } from '../../context';
+import Button from '../Button';
+import {formatTime} from '../../utils/helpers';
 
 const CountdownTimer = ({
   initialSeconds,
@@ -7,15 +10,24 @@ const CountdownTimer = ({
   initialSeconds: number;
   startCountDown: boolean;
 }) => {
-  const [seconds, setSeconds] = useState(initialSeconds);
+  const { contractData } = useContext(RpsContext);
+
+  const player1Time = new Date(contractData?.last_action);
+  const timeoutTime = new Date(contractData?.last_action + initialSeconds * 1000);
+  const currentTime = new Date();
+
+  const timeDifference = (Number(timeoutTime) - Number(currentTime)) / 1000;
+
+  const [seconds, setSeconds] = useState(timeDifference);
+
+  console.log(Number(timeoutTime) - Number(player1Time))
 
   useEffect(() => {
-    if (seconds > 0 && startCountDown) {
+    if (seconds > 0) {
       const counterInterval = setInterval(() => {
         setSeconds((prevSeconds) => prevSeconds - 1);
       }, 1000);
 
-      // Cleanup the interval on component unmount or when seconds reach 0
       return () => clearInterval(counterInterval);
     } else {
       return;
@@ -24,7 +36,7 @@ const CountdownTimer = ({
 
   // Format seconds into minutes and seconds
   const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+  const remainingSeconds = Math.floor(seconds % 60);
 
   return (
     <div className="mt-8">
@@ -32,6 +44,8 @@ const CountdownTimer = ({
       <p>
         Time Remaining: {minutes} minutes {remainingSeconds} seconds
       </p>
+
+      {seconds === 0 && <Button>Player 2 Timeout</Button>}
     </div>
   );
 };

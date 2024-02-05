@@ -16,7 +16,7 @@ export const RpsContext = createContext<any>(undefined);
 
 export const RpsProvider = ({ children }: IProvider) => {
   const [currentAccount, setCurrentAccount] = useState('');
-  const [contractAddress, setContractAddress] = useState('');
+  const [contractAddress, setContractAddress] = useState(ls.get('contract-address') || '');
   const [contractData, setContractData] = useState<any>({});
   const [isConnected, setIsConnected] = useState(false);
 
@@ -123,7 +123,7 @@ export const RpsProvider = ({ children }: IProvider) => {
           timeout: ethers.BigNumber.from(TIMEOUT._hex).toNumber(),
           c2,
           stake,
-          last_action: formatTime(lastAction._hex * 1000),
+          last_action: lastAction._hex * 1000,
         });
       }
     } catch (e) {
@@ -190,6 +190,7 @@ export const RpsProvider = ({ children }: IProvider) => {
         setCurrentAccount,
         connectWallet,
         isConnected,
+        setContractData,
         hasher,
         deployRPS,
         contractAddress,
@@ -197,7 +198,7 @@ export const RpsProvider = ({ children }: IProvider) => {
         getContractData,
         player2Move,
         j2_Timeout,
-        solve
+        solve,
       }}
     >
       {children}
