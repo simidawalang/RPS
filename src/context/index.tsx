@@ -4,6 +4,7 @@ import useAsyncEffect from 'use-async-effect';
 import { RPS_ABI, RPS_BYTECODE, HASHER_ADDRESS, HASHER_ABI } from '../constants';
 import { formatTime } from '../utils/helpers';
 
+
 interface IProvider {
   children: ReactNode;
   test?: string;
@@ -83,8 +84,7 @@ export const RpsProvider = ({ children }: IProvider) => {
   const deployRPS = async (data: any) => {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = new ethers.Wallet(
-        '479a4b2282bb0124affadc56d6d34fef340e8bd2c87a055bcbb60a0dfe401388',
+      const signer = new ethers.Wallet(`${process.env.REACT_APP_PRIVATE_KEY}`,
         provider
       );
 
@@ -121,10 +121,10 @@ export const RpsProvider = ({ children }: IProvider) => {
           player_1,
           player_2,
           c1Hash,
-          timeout: formatTime((TIMEOUT._hex * 1000).toString()),
+          timeout: ethers.BigNumber.from(TIMEOUT._hex).toNumber(),
           c2,
           stake,
-          last_action: formatTime((lastAction._hex * 1000).toString()),
+          last_action: formatTime(lastAction._hex * 1000),
         });
       }
     } catch (e) {
@@ -132,10 +132,11 @@ export const RpsProvider = ({ children }: IProvider) => {
     }
   };
 
-  const timeout = async () => {
+  const j2_Timeout = async () => {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const rpsContract = new Contract(contractAddress, RPS_ABI, provider);
+      await rpsContract.j2Timeout();
     } catch (e) {
       console.log(e);
     }
@@ -143,7 +144,6 @@ export const RpsProvider = ({ children }: IProvider) => {
 
   const player2Move = async (move: string) => {
     try {
-      console.log(move);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
 
@@ -177,6 +177,7 @@ export const RpsProvider = ({ children }: IProvider) => {
         contractData,
         getContractData,
         player2Move,
+        j2_Timeout
       }}
     >
       {children}

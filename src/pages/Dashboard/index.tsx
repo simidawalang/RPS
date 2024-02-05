@@ -3,6 +3,7 @@ import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from '
 import { RpsContext } from '../../context';
 import SecureLS from 'secure-ls';
 import useAsyncEffect from 'use-async-effect';
+import CountdownTimer from '../../components/CountdownTimer';
 
 const Dashboard = () => {
   const {
@@ -23,6 +24,8 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [move, setMove] = useState('0');
+  const [userMessage, setUserMessage] = useState('');
+  const [startCountDown, setStartCountdown] = useState(false);
 
   const handleOpponentChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -38,11 +41,16 @@ const Dashboard = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    setUserMessage('');
     setLoading(true);
+    setUserMessage('Generating hash...');
     const salt = Math.round(Math.random() * 100).toString();
     const hash = await hasher(move, salt);
 
     console.log('Hash:', hash);
+    if (hash) {
+      setUserMessage('Hash generated, deploying contract...');
+    }
 
     ls.set('hash-data', {
       hash,
@@ -56,17 +64,15 @@ const Dashboard = () => {
     });
 
     setLoading(false);
+    setStartCountdown(true);
   };
-
-  // useEffect(() => {
-  //   getContractData()
-  // }, [contractAddress])
 
   const getData = async () => {
     setLoading(true);
 
     await getContractData();
     setLoading(false);
+    setMove('0');
   };
 
   const player2_move = async () => {
@@ -78,24 +84,29 @@ const Dashboard = () => {
   useEffect(() => {
     ls.clear();
   }, []);
+
   useAsyncEffect(() => {
     getData();
   }, [contractAddress]);
 
-  console.log(contractData);
+  //console.log(typeof contractData.timeout);
 
   return (
     <div>
       {contractData?.player_1 && (
-        <div>
-          <p>P1: {contractData?.player_1}</p>
+        <div >
+          <p >P1: {contractData?.player_1}</p>
           <p>P2: {contractData?.player_2}</p>
 
           <p>Amount to stake: {ethers.utils.formatEther(contractData?.stake._hex)}</p>
+
+          {contractAddress && <div>Contract deployed to: {contractAddress}</div>}
         </div>
       )}
       <form onSubmit={handleSubmit}>
-        <p>You&apos;re the first player, select your move and choose your opponent</p>
+        {!contractData.player_1 && (
+          <p className='font-bold'>You&apos;re the first player, select your move and choose your opponent</p>
+        )}
         <label htmlFor="move">Move:</label>
         <br />
         <select
@@ -142,15 +153,14 @@ const Dashboard = () => {
           </div>
         )}
       </form>
-      {loading && <div>loading</div>}
-      {contractAddress && <div>Latest contract deployed to: {contractAddress}</div>}
-      {/* 0xD868b925f5f4983f09605Be561aD2cdeB21089Bc */}
-      {/* <button onClick={getData}>get contract data</button> */}
-
+      {loading && userMessage && <div>{userMessage}</div>}
       {currentAccount === contractData?.player_2 && (
         <div>
           <button onClick={player2_move}>Player 2</button>
         </div>
+      )}{' '}
+      {startCountDown && contractData.timeout && (
+        <CountdownTimer initialSeconds={Number(contractData.timeout)} />
       )}
     </div>
   );
