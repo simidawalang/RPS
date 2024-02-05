@@ -84,9 +84,7 @@ export const RpsProvider = ({ children }: IProvider) => {
   const deployRPS = async (data: any) => {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = new ethers.Wallet(`${process.env.REACT_APP_PRIVATE_KEY}`,
-        provider
-      );
+      const signer = provider.getSigner();
 
       const RPS_Factory = new ethers.ContractFactory(RPS_ABI, RPS_BYTECODE, signer);
       const deployedContract = await RPS_Factory.deploy(data.hash, data.address, {
@@ -104,6 +102,7 @@ export const RpsProvider = ({ children }: IProvider) => {
   };
 
   const getContractData = async () => {
+    console.log("fetched");
     try {
       if (contractAddress) {
         const provider = new ethers.providers.Web3Provider(window.ethereum);

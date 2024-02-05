@@ -67,15 +67,7 @@ const Dashboard = () => {
     setLoading(false);
     setStartCountdown(true);
   };
-
-  const getData = async () => {
-    setLoading(true);
-
-    await getContractData();
-    setLoading(false);
-    setMove('0');
-  };
-
+  
   const player2_move = async () => {
     setLoading(true);
     await player2Move(move);
@@ -87,11 +79,8 @@ const Dashboard = () => {
   }, []);
 
   useAsyncEffect(() => {
-    getData();
+    getContractData();
   }, [contractAddress]);
-
-  //console.log(typeof contractData.timeout);
-  console.log(move);
 
   return (
     <div>
