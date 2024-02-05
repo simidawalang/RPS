@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { RpsContext } from '../../context';
 import SecureLS from 'secure-ls';
 import useAsyncEffect from 'use-async-effect';
@@ -27,6 +27,8 @@ const Dashboard = () => {
   const [move, setMove] = useState('1');
   const [userMessage, setUserMessage] = useState('');
   const [startCountDown, setStartCountdown] = useState(false);
+  const [player2Played, setPlayer2Played] = useState(false);
+  const { c2 } = getContractData('');
 
   const handleOpponentChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,29 +67,40 @@ const Dashboard = () => {
     });
 
     await getContractData(_contract);
+    setPlayer2Played(true);
     await setLoading(false);
     setStartCountdown(true);
     setUserMessage('');
   };
 
-  const player2_move = async () => {
+  // const player2_move = async () => {
+  //   setLoading(true);
+  //   setUserMessage('Sending move to contract...');
+  //   const p2 = await player2Move(move);
+  //   const { c2 } = await getContractData(contractAddress);
+
+  //   console.log(move, p2.move);
+  //   console.log(c2);
+  //   setLoading(false);
+  //   setUserMessage('');
+  // };
+
+  const player2_move = async (e: any) => {
+    e.stopPropagation();
+
+    setUserMessage('');
     setLoading(true);
-    setUserMessage('Sending move to contract...');
-    player2Move(move);
+    setUserMessage('Sending player 2 move...');
 
-    getContractData(contractAddress);
+    const res = await player2Move(move);
 
-    setLoading(false);
+    const { c2 } = await getContractData(contractAddress);
+    console.log(c2, res);
+    setPlayer2Played(true);
+    await setLoading(false);
+    setStartCountdown(true);
     setUserMessage('');
   };
-
-  // useEffect(() => {
-  //   ls.clear();
-  // }, []);
-
-  useAsyncEffect(() => {
-    getContractData();
-  }, [contractAddress]);
 
   return (
     <div>
@@ -161,6 +174,16 @@ const Dashboard = () => {
       {startCountDown && contractData.timeout && (
         <CountdownTimer initialSeconds={Number(contractData.timeout)} />
       )}
+
+      {
+        <Button
+          onClick={() => {
+            getContractData(contractAddress);
+          }}
+        >
+          Solve
+        </Button>
+      }
     </div>
   );
 };

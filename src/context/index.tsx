@@ -1,6 +1,7 @@
 import React, { useState, createContext, ReactNode } from 'react';
 import { Contract, ethers } from 'ethers';
 import useAsyncEffect from 'use-async-effect';
+import SecureLS from 'secure-ls';
 import { RPS_ABI, RPS_BYTECODE, HASHER_ADDRESS, HASHER_ABI } from '../constants';
 import { formatTime } from '../utils/helpers';
 
@@ -9,13 +10,13 @@ interface IProvider {
   test?: string;
 }
 
+const ls = new SecureLS();
+
 export const RpsContext = createContext<any>(undefined);
 
 export const RpsProvider = ({ children }: IProvider) => {
   const [currentAccount, setCurrentAccount] = useState('');
-  const [contractAddress, setContractAddress] = useState(
-    localStorage.getItem('contract-address') || ''
-  );
+  const [contractAddress, setContractAddress] = useState('');
   const [contractData, setContractData] = useState<any>({});
   const [isConnected, setIsConnected] = useState(false);
 
@@ -81,7 +82,7 @@ export const RpsProvider = ({ children }: IProvider) => {
   };
 
   const deployRPS = async (data: any) => {
-    console.log("deploying rps")
+    console.log('deploying rps');
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
@@ -93,21 +94,19 @@ export const RpsProvider = ({ children }: IProvider) => {
       await deployedContract.deployed();
 
       setContractAddress(deployedContract.address);
-
+      ls.set('contract-address', deployedContract.address);
+      setContractAddress(deployedContract.address);
       return deployedContract.address;
     } catch (e) {
       console.log(e);
     }
   };
 
-  const getContractData = async (address: string) => {
+  const getContractData = async (address: string, test?: string) => {
     try {
       if (address) {
-        console.log("fetching...")
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-        let rpsContract  = new Contract(address, RPS_ABI, provider);
-        
+        let rpsContract = new Contract(address, RPS_ABI, provider);
 
         const player_1 = await rpsContract.j1();
         const player_2 = await rpsContract.j2();
@@ -126,6 +125,14 @@ export const RpsProvider = ({ children }: IProvider) => {
           stake,
           last_action: formatTime(lastAction._hex * 1000),
         });
+
+        return {
+          player_1,
+          player_2,
+          TIMEOUT,
+          c1Hash,
+          c2,
+        };
       }
     } catch (e) {
       console.log(e);
@@ -150,9 +157,27 @@ export const RpsProvider = ({ children }: IProvider) => {
       const amount = ethers.utils.formatUnits(contractData.stake._hex, 18);
 
       const rpsContract = new ethers.Contract(contractAddress, RPS_ABI, signer);
-      await rpsContract.play(move, {
+      const res = await rpsContract.play(move, {
         value: ethers.utils.parseEther(amount),
       });
+
+      await res.wait();
+
+      return res;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const solve = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      const rpsContract = new ethers.Contract(contractAddress, RPS_ABI, signer);
+      const res = await rpsContract.solve(ls.get('hash-data').move, ls.get('hash-data').salt);
+
+      return res;
     } catch (e) {
       console.log(e);
     }
@@ -178,6 +203,7 @@ export const RpsProvider = ({ children }: IProvider) => {
         getContractData,
         player2Move,
         j2_Timeout,
+        solve
       }}
     >
       {children}
