@@ -60,7 +60,7 @@ const Dashboard = () => {
 
     const _contract = await deployRPS({
       hash,
-      address: matchDetails.address,
+      address: matchDetails.address.trim(),
       stake: matchDetails.stake,
     });
 
@@ -152,7 +152,7 @@ const Dashboard = () => {
                   onChange={handleOpponentChange}
                 />
 
-                <Button disabled={!matchDetails.opponent}>
+                <Button disabled={matchDetails.address.length === 0}>
                   {loading ? 'Loading...' : 'Start Game'}
                 </Button>
               </div>
