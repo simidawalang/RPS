@@ -125,14 +125,6 @@ export const RpsProvider = ({ children }: IProvider) => {
           stake,
           last_action: formatTime(lastAction._hex * 1000),
         });
-
-        return {
-          player_1,
-          player_2,
-          TIMEOUT,
-          c1Hash,
-          c2,
-        };
       }
     } catch (e) {
       console.log(e);
@@ -169,13 +161,15 @@ export const RpsProvider = ({ children }: IProvider) => {
     }
   };
 
-  const solve = async () => {
+  const solve = async (data: any) => {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
 
       const rpsContract = new ethers.Contract(contractAddress, RPS_ABI, signer);
-      const res = await rpsContract.solve(ls.get('hash-data').move, ls.get('hash-data').salt);
+      const res = await rpsContract.solve(data.move, data.salt);
+
+      await res.wait();
 
       return res;
     } catch (e) {

@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import React, { ChangeEvent, FormEvent, useContext, useState } from 'react';
 import { RpsContext } from '../../context';
 import SecureLS from 'secure-ls';
-import useAsyncEffect from 'use-async-effect';
 import CountdownTimer from '../../components/CountdownTimer';
 import { Button, Input, Select } from '../../components';
 
@@ -15,6 +14,7 @@ const Dashboard = () => {
     getContractData,
     contractData,
     player2Move,
+    solve,
   } = useContext(RpsContext);
   const ls = new SecureLS();
 
@@ -27,8 +27,6 @@ const Dashboard = () => {
   const [move, setMove] = useState('1');
   const [userMessage, setUserMessage] = useState('');
   const [startCountDown, setStartCountdown] = useState(false);
-  const [player2Played, setPlayer2Played] = useState(false);
-  const { c2 } = getContractData('');
 
   const handleOpponentChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,12 +48,12 @@ const Dashboard = () => {
     const salt = Math.round(Math.random() * 100).toString();
     const hash = await hasher(move, salt);
 
-    console.log('Hash:', hash);
     if (hash) {
       setUserMessage('Hash generated, deploying contract...');
     }
 
     ls.set('hash-data', {
+      move,
       hash,
       salt,
     });
@@ -67,23 +65,10 @@ const Dashboard = () => {
     });
 
     await getContractData(_contract);
-    setPlayer2Played(true);
     await setLoading(false);
     setStartCountdown(true);
     setUserMessage('');
   };
-
-  // const player2_move = async () => {
-  //   setLoading(true);
-  //   setUserMessage('Sending move to contract...');
-  //   const p2 = await player2Move(move);
-  //   const { c2 } = await getContractData(contractAddress);
-
-  //   console.log(move, p2.move);
-  //   console.log(c2);
-  //   setLoading(false);
-  //   setUserMessage('');
-  // };
 
   const player2_move = async (e: any) => {
     e.stopPropagation();
@@ -92,19 +77,18 @@ const Dashboard = () => {
     setLoading(true);
     setUserMessage('Sending player 2 move...');
 
-    const res = await player2Move(move);
-
-    const { c2 } = await getContractData(contractAddress);
-    console.log(c2, res);
-    setPlayer2Played(true);
+    await player2Move(move);
+    await getContractData(contractAddress);
+    setStartCountdown(false);
     await setLoading(false);
-    setStartCountdown(true);
     setUserMessage('');
   };
 
   return (
     <div>
       <p className="font-bold mb-6">Interact with this app using Metamask on Sepolia Testnet</p>
+
+      {/* Player 1 had deployed and added an opponent i.e. the contract exists*/}
       {contractData?.player_1 && (
         <div className="mb-8">
           <p>Player 1: {contractData?.player_1}</p>
@@ -116,7 +100,7 @@ const Dashboard = () => {
         </div>
       )}
       <form onSubmit={handleSubmit}>
-        {!contractData.player_1 && (
+        {!contractData?.player_1 && (
           <p className="font-bold mb-5">
             You&apos;re the first player, select your move and choose your opponent
           </p>
@@ -138,52 +122,62 @@ const Dashboard = () => {
           <option value={4}>SPOCK</option>
           <option value={5}>LIZARD</option>
         </Select>
-        {!contractData.player_1 && (
-          <div className="md:max-w-[50%]">
-            <Input
-              className="mb-3"
-              label="Opponent Address:"
-              id="address"
-              name="address"
-              placeholder="Enter opponents address"
-              value={matchDetails.address}
-              onChange={handleOpponentChange}
-            />
+        {!contractData?.player_1 ||
+          (currentAccount !== contractData?.player_1 &&
+            currentAccount !== contractData?.player_2 && (
+              <div className="md:max-w-[50%]">
+                <Input
+                  className="mb-3"
+                  label="Opponent Address:"
+                  id="address"
+                  name="address"
+                  placeholder="Enter opponents address"
+                  value={matchDetails.address}
+                  onChange={handleOpponentChange}
+                />
 
-            <Input
-              className="mb-3"
-              label="Stake (ETH):"
-              id="stake"
-              type="number"
-              name="stake"
-              placeholder="Amount of ETH to stake"
-              value={matchDetails.stake}
-              onChange={handleOpponentChange}
-            />
+                <Input
+                  className="mb-3"
+                  label="Stake (ETH):"
+                  id="stake"
+                  type="number"
+                  name="stake"
+                  placeholder="Amount of ETH to stake"
+                  value={matchDetails.stake}
+                  onChange={handleOpponentChange}
+                />
 
-            <Button>{loading ? 'Loading...' : 'Start game'}</Button>
-          </div>
-        )}
+                <Button>{loading ? 'Loading...' : 'Start game'}</Button>
+              </div>
+            ))}
       </form>
       {loading && userMessage && <div>{userMessage}</div>}
-      {currentAccount === contractData?.player_2 && !contractData.c2 && (
+
+      {/* Current account is Player 2 and has not played */}
+      {currentAccount === contractData?.player_2 && !contractData?.c2 && (
         <div>
           <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
         </div>
       )}
+
+      {/* Player 1 has played and a timeout can be called from the contract */}
       {startCountDown && contractData.timeout && (
-        <CountdownTimer initialSeconds={Number(contractData.timeout)} />
+        <CountdownTimer
+          initialSeconds={Number(contractData.timeout)}
+          startCountDown={startCountDown}
+        />
       )}
 
-      {
+      {/* After player 2 has made a move, and the current address is the first player */}
+      {contractData?.c2 && currentAccount === contractData?.player_1 && (
         <Button
           onClick={() => {
-            getContractData(contractAddress);
+            solve({ move: ls.get('hash-data').move, salt: ls.get('hash-data').salt });
           }}
         >
           Solve
         </Button>
-      }
+      )}
     </div>
   );
 };
