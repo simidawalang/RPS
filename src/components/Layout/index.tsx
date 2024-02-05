@@ -8,11 +8,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <>
       <nav className="flex justify-between items-center px-8 py-4 border-b border-gray-300">
-        <h3 className="font-bold text-2xl">RPS Game</h3>
+        <h3 className="font-bold md:text-2xl">RPS Game</h3>
         {!currentAccount ? (
           <Button onClick={connectWallet}>Connect</Button>
         ) : (
-          <span>Current Account: {currentAccount}</span>
+          <span className="text-ellipsis overflow-hidden ...">
+            Current Account: {currentAccount}
+          </span>
         )}
       </nav>
 

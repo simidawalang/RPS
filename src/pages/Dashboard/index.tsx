@@ -84,48 +84,53 @@ const Dashboard = () => {
     setUserMessage('');
   };
 
+  const solveGame = async () => {
+    await solve({ move: ls.get('hash-data').move, salt: ls.get('hash-data').salt });
+    setUserMessage('Check your balance to see if you won, lost or had a tie');
+  };
+
   return (
-    <div>
-      <p className="font-bold mb-6">Interact with this app using Metamask on Sepolia Testnet</p>
+    <div className="grid gap-10 md:grid-cols-2">
+      {currentAccount ? (
+        <div>
+          <p className="font-bold mb-6">Interact with this app using Metamask on Sepolia Testnet</p>
 
-      {/* Player 1 had deployed and added an opponent i.e. the contract exists*/}
-      {contractData?.player_1 && (
-        <div className="mb-8">
-          <p>Player 1: {contractData?.player_1}</p>
-          <p>Player 2: {contractData?.player_2}</p>
+          {/* Player 1 had deployed and added an opponent i.e. the contract exists*/}
+          {contractData?.player_1 && (
+            <div className="mb-8">
+              <p>Player 1: {contractData?.player_1}</p>
+              <p>Player 2: {contractData?.player_2}</p>
 
-          <p>Amount to stake: {ethers.utils.formatEther(contractData?.stake._hex)}ETH</p>
+              <p>Amount to stake: {ethers.utils.formatEther(contractData?.stake._hex)}ETH</p>
 
-          {contractAddress && <div>Contract deployed to: {contractAddress}</div>}
-        </div>
-      )}
-      <form onSubmit={handleSubmit}>
-        {!contractData?.player_1 && (
-          <p className="font-bold mb-5">
-            You&apos;re the first player, select your move and choose your opponent
-          </p>
-        )}
+              {contractAddress && <div>Contract deployed to: {contractAddress}</div>}
+            </div>
+          )}
+          <form onSubmit={handleSubmit}>
+            {!contractData?.player_1 && (
+              <p className="font-bold mb-5">
+                You&apos;re the first player, select your move and choose your opponent
+              </p>
+            )}
 
-        <Select
-          className="mb-3 md:max-w-[50%]"
-          id="move"
-          name="move"
-          value={move}
-          label="Move:"
-          onChange={(e: any) => {
-            setMove(e.target.value);
-          }}
-        >
-          <option value={1}>ROCK</option>
-          <option value={2}>PAPER</option>
-          <option value={3}>SCISSORS</option>
-          <option value={4}>SPOCK</option>
-          <option value={5}>LIZARD</option>
-        </Select>
-        {!contractData?.player_1 ||
-          (currentAccount !== contractData?.player_1 &&
-            currentAccount !== contractData?.player_2 && (
-              <div className="md:max-w-[50%]">
+            <Select
+              className="mb-3 "
+              id="move"
+              name="move"
+              value={move}
+              label="Move:"
+              onChange={(e: any) => {
+                setMove(e.target.value);
+              }}
+            >
+              <option value={1}>ROCK</option>
+              <option value={2}>PAPER</option>
+              <option value={3}>SCISSORS</option>
+              <option value={4}>SPOCK</option>
+              <option value={5}>LIZARD</option>
+            </Select>
+            {!contractData?.player_1 && (
+              <div className="">
                 <Input
                   className="mb-3"
                   label="Opponent Address:"
@@ -147,36 +152,34 @@ const Dashboard = () => {
                   onChange={handleOpponentChange}
                 />
 
-                <Button>{loading ? 'Loading...' : 'Start game'}</Button>
+                <Button disabled={!matchDetails.opponent}>
+                  {loading ? 'Loading...' : 'Start Game'}
+                </Button>
               </div>
-            ))}
-      </form>
-      {loading && userMessage && <div>{userMessage}</div>}
+            )}
+          </form>
 
-      {/* Current account is Player 2 and has not played */}
-      {currentAccount === contractData?.player_2 && !contractData?.c2 && (
-        <div>
-          <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
+          {/* Current account is Player 2 and has not played */}
+          {currentAccount === contractData?.player_2 && !contractData?.c2 && (
+            <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
+          )}
+
+          {/* Player 1 has played and a timeout can be called from the contract */}
+
+          {/* After player 2 has made a move, and the current address is the first player */}
+          {contractData?.c2 && currentAccount === contractData?.player_1 && (
+            <Button onClick={solveGame}>Solve</Button>
+          )}
+          {loading && userMessage && <div className="mt-4">{userMessage}</div>}
         </div>
+      ) : (
+        <p>Please connect your wallet</p>
       )}
-
-      {/* Player 1 has played and a timeout can be called from the contract */}
       {startCountDown && contractData.timeout && (
         <CountdownTimer
           initialSeconds={Number(contractData.timeout)}
           startCountDown={startCountDown}
         />
-      )}
-
-      {/* After player 2 has made a move, and the current address is the first player */}
-      {contractData?.c2 && currentAccount === contractData?.player_1 && (
-        <Button
-          onClick={() => {
-            solve({ move: ls.get('hash-data').move, salt: ls.get('hash-data').salt });
-          }}
-        >
-          Solve
-        </Button>
       )}
     </div>
   );

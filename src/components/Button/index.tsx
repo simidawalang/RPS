@@ -10,7 +10,7 @@ interface IButton {
 const Button = ({ className, onClick, children, disabled }: IButton) => {
   return (
     <button
-      className={`bg-lime-600 text-white rounded py-1.5 px-3 ${className}`}
+      className={`bg-lime-600 text-white rounded py-1.5 px-3 ${className} disabled:bg-gray-200 disabled:text-black`}
       onClick={onClick}
       disabled={disabled}
     >
