@@ -24,6 +24,8 @@ const CountdownTimer = ({
     setLoading(true);
     await j2_Timeout();
     setLoading(false);
+    setContractData({});
+    ls.remove('contract-address');
   };
 
   useEffect(() => {
@@ -52,17 +54,9 @@ const CountdownTimer = ({
       {remainingSeconds <= 0 &&
         currentAccount?.toLowerCase() === contractData?.player_1?.toLowerCase() && (
           <div>
+            <p>Call a timeout to send back your staked ETH and start a new game</p>
             <Button className="mt-3" onClick={timeoutPlayer2}>
               {loading ? 'Loading...' : 'Player 2 Timeout'}
-            </Button>
-            <Button
-              className="mt-3 block"
-              onClick={() => {
-                setContractData({});
-                ls.remove('contract-address');
-              }}
-            >
-              Start New Game
             </Button>
           </div>
         )}
