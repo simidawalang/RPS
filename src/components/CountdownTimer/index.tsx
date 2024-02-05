@@ -8,7 +8,7 @@ const CountdownTimer = ({
   startCountDown,
 }: {
   timeoutInterval: number;
-  startCountDown: boolean;
+  startCountDown?: boolean;
 }) => {
   const ls = new SecureLS();
   const { contractData, setContractData, currentAccount, j2_Timeout } = useContext(RpsContext);
@@ -54,10 +54,10 @@ const CountdownTimer = ({
       {remainingSeconds <= 0 &&
         currentAccount?.toLowerCase() === contractData?.player_1?.toLowerCase() && (
           <div>
-            <p>Call a timeout to send back your staked ETH and start a new game</p>
             <Button className="mt-3" onClick={timeoutPlayer2}>
               {loading ? 'Loading...' : 'Player 2 Timeout'}
             </Button>
+          
           </div>
         )}
     </div>

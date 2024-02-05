@@ -84,12 +84,15 @@ const Dashboard = () => {
     await getContractData(contractAddress);
     setStartCountdown(false);
     await setLoading(false);
+    setMove('1');
     setUserMessage('');
   };
 
   const solveGame = async () => {
+    setLoading(true);
     await solve({ move: ls.get('hash-data').move, salt: ls.get('hash-data').salt });
     setUserMessage('Check your balance to see if you won, lost or had a tie');
+    setLoading(false);
   };
 
   useAsyncEffect(() => {
@@ -177,33 +180,33 @@ const Dashboard = () => {
             <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
           )}
 
-          {/* Player 1 has played and a timeout can be called from the contract */}
-
-          {/* After player 2 has made a move, and the current address is the first player */}
-          {contractData?.c2 && currentAccount === contractData?.player_1 && (
-            <div>
-              <Button onClick={solveGame}>Solve</Button>
-              <Button
-                className="block mt-2"
-                onClick={() => {
-                  ls.remove('contract-address');
-                  setContractData({});
-                }}
-              >
-                Start New Game
-              </Button>
-            </div>
-          )}
+          {/* After player 2 has made a move, and the current address is player 1 */}
+          {contractData?.c2 &&
+            currentAccount?.toLowerCase() === contractData?.player_1.toLowerCase() && (
+              <div>
+                <Button onClick={solveGame}>
+                  {loading ? 'Loading...' : 'Solve (call this first)'}
+                </Button>
+                <Button
+                  className="block mt-2"
+                  onClick={() => {
+                    ls.remove('contract-address');
+                    setContractData({});
+                  }}
+                >
+                  Start New Game
+                </Button>
+              </div>
+            )}
           {userMessage && <div className="mt-4">{userMessage}</div>}
         </div>
       ) : (
         <p>Please connect your wallet</p>
       )}
-      {contractData.timeout && (
-        <CountdownTimer
-          timeoutInterval={Number(contractData.timeout)}
-          startCountDown={startCountDown}
-        />
+
+      {/* Show the countdown timer when player 1 has played but player 2 has not */}
+      {contractData.c1Hash && !contractData.c2 && (
+        <CountdownTimer timeoutInterval={Number(contractData.timeout)} />
       )}
     </div>
   );
