@@ -3,11 +3,9 @@ import { Contract, ethers } from 'ethers';
 import useAsyncEffect from 'use-async-effect';
 import SecureLS from 'secure-ls';
 import { RPS_ABI, RPS_BYTECODE, HASHER_ADDRESS, HASHER_ABI } from '../constants';
-import { formatTime } from '../utils/helpers';
 
 interface IProvider {
   children: ReactNode;
-  test?: string;
 }
 
 const ls = new SecureLS();
@@ -102,7 +100,7 @@ export const RpsProvider = ({ children }: IProvider) => {
     }
   };
 
-  const getContractData = async (address: string, test?: string) => {
+  const getContractData = async (address: string) => {
     try {
       if (address) {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -134,8 +132,10 @@ export const RpsProvider = ({ children }: IProvider) => {
   const j2_Timeout = async () => {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const rpsContract = new Contract(contractAddress, RPS_ABI, provider);
-      await rpsContract.j2Timeout();
+      const signer = provider.getSigner();
+      const rpsContract = new Contract(contractAddress, RPS_ABI, signer);
+      const res = await rpsContract.j2Timeout();
+      await res.wait();
     } catch (e) {
       console.log(e);
     }

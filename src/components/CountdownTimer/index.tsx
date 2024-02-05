@@ -1,26 +1,30 @@
 import { useState, useEffect, useContext } from 'react';
 import { RpsContext } from '../../context';
 import Button from '../Button';
-import {formatTime} from '../../utils/helpers';
+import SecureLS from 'secure-ls';
 
 const CountdownTimer = ({
-  initialSeconds,
+  timeoutInterval,
   startCountDown,
 }: {
-  initialSeconds: number;
+  timeoutInterval: number;
   startCountDown: boolean;
 }) => {
-  const { contractData } = useContext(RpsContext);
-
-  const player1Time = new Date(contractData?.last_action);
-  const timeoutTime = new Date(contractData?.last_action + initialSeconds * 1000);
+  const ls = new SecureLS();
+  const { contractData, setContractData, currentAccount, j2_Timeout } = useContext(RpsContext);
+  const timeoutTime = new Date(contractData?.last_action + timeoutInterval * 1000);
   const currentTime = new Date();
 
   const timeDifference = (Number(timeoutTime) - Number(currentTime)) / 1000;
 
   const [seconds, setSeconds] = useState(timeDifference);
+  const [loading, setLoading] = useState(false);
 
-  console.log(Number(timeoutTime) - Number(player1Time))
+  const timeoutPlayer2 = async () => {
+    setLoading(true);
+    await j2_Timeout();
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (seconds > 0) {
@@ -45,7 +49,23 @@ const CountdownTimer = ({
         Time Remaining: {minutes} minutes {remainingSeconds} seconds
       </p>
 
-      {seconds === 0 && <Button>Player 2 Timeout</Button>}
+      {remainingSeconds <= 0 &&
+        currentAccount?.toLowerCase() === contractData?.player_1?.toLowerCase() && (
+          <div>
+            <Button className="mt-3" onClick={timeoutPlayer2}>
+              {loading ? 'Loading...' : 'Player 2 Timeout'}
+            </Button>
+            <Button
+              className="mt-3 block"
+              onClick={() => {
+                setContractData({});
+                ls.remove('contract-address');
+              }}
+            >
+              Start New Game
+            </Button>
+          </div>
+        )}
     </div>
   );
 };

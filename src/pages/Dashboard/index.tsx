@@ -70,6 +70,7 @@ const Dashboard = () => {
     await setLoading(false);
     setStartCountdown(true);
     setUserMessage('');
+    setMove('1');
   };
 
   const player2_move = async (e: any) => {
@@ -189,7 +190,7 @@ const Dashboard = () => {
                   setContractData({});
                 }}
               >
-                Play Again
+                Start New Game
               </Button>
             </div>
           )}
@@ -200,7 +201,7 @@ const Dashboard = () => {
       )}
       {contractData.timeout && (
         <CountdownTimer
-          initialSeconds={Number(contractData.timeout)}
+          timeoutInterval={Number(contractData.timeout)}
           startCountDown={startCountDown}
         />
       )}
