@@ -24,7 +24,7 @@ const Dashboard = () => {
     stake: '0',
   });
   const [loading, setLoading] = useState(false);
-  const [move, setMove] = useState('0');
+  const [move, setMove] = useState('1');
   const [userMessage, setUserMessage] = useState('');
   const [startCountDown, setStartCountdown] = useState(false);
 
@@ -58,25 +58,32 @@ const Dashboard = () => {
       salt,
     });
 
-    await deployRPS({
+    const _contract = await deployRPS({
       hash,
       address: matchDetails.address,
       stake: matchDetails.stake,
     });
 
-    setLoading(false);
+    await getContractData(_contract);
+    await setLoading(false);
     setStartCountdown(true);
-  };
-  
-  const player2_move = async () => {
-    setLoading(true);
-    await player2Move(move);
-    setLoading(false);
+    setUserMessage('');
   };
 
-  useEffect(() => {
-    ls.clear();
-  }, []);
+  const player2_move = async () => {
+    setLoading(true);
+    setUserMessage('Sending move to contract...');
+    player2Move(move);
+
+    getContractData(contractAddress);
+
+    setLoading(false);
+    setUserMessage('');
+  };
+
+  // useEffect(() => {
+  //   ls.clear();
+  // }, []);
 
   useAsyncEffect(() => {
     getContractData();
@@ -84,9 +91,9 @@ const Dashboard = () => {
 
   return (
     <div>
-      <p className='font-bold mb-6'>Interact with this app using Metamask on Sepolia Testnet</p>
+      <p className="font-bold mb-6">Interact with this app using Metamask on Sepolia Testnet</p>
       {contractData?.player_1 && (
-        <div className='mb-8'>
+        <div className="mb-8">
           <p>Player 1: {contractData?.player_1}</p>
           <p>Player 2: {contractData?.player_2}</p>
 
@@ -132,7 +139,7 @@ const Dashboard = () => {
 
             <Input
               className="mb-3"
-              label="Stake:"
+              label="Stake (ETH):"
               id="stake"
               type="number"
               name="stake"
@@ -141,16 +148,16 @@ const Dashboard = () => {
               onChange={handleOpponentChange}
             />
 
-            <Button>Start game</Button>
+            <Button>{loading ? 'Loading...' : 'Start game'}</Button>
           </div>
         )}
       </form>
       {loading && userMessage && <div>{userMessage}</div>}
-      {currentAccount === contractData?.player_2 && (
+      {currentAccount === contractData?.player_2 && !contractData.c2 && (
         <div>
-          <Button onClick={player2_move}>Player 2</Button>
+          <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
         </div>
-      )}{' '}
+      )}
       {startCountDown && contractData.timeout && (
         <CountdownTimer initialSeconds={Number(contractData.timeout)} />
       )}

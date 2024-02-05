@@ -4,7 +4,6 @@ import useAsyncEffect from 'use-async-effect';
 import { RPS_ABI, RPS_BYTECODE, HASHER_ADDRESS, HASHER_ABI } from '../constants';
 import { formatTime } from '../utils/helpers';
 
-
 interface IProvider {
   children: ReactNode;
   test?: string;
@@ -82,6 +81,7 @@ export const RpsProvider = ({ children }: IProvider) => {
   };
 
   const deployRPS = async (data: any) => {
+    console.log("deploying rps")
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
@@ -92,21 +92,22 @@ export const RpsProvider = ({ children }: IProvider) => {
       });
       await deployedContract.deployed();
 
-      console.log(deployedContract);
       setContractAddress(deployedContract.address);
 
-      return deployedContract;
+      return deployedContract.address;
     } catch (e) {
       console.log(e);
     }
   };
 
-  const getContractData = async () => {
-    console.log("fetched");
+  const getContractData = async (address: string) => {
     try {
-      if (contractAddress) {
+      if (address) {
+        console.log("fetching...")
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const rpsContract = new Contract(contractAddress, RPS_ABI, provider);
+
+        let rpsContract  = new Contract(address, RPS_ABI, provider);
+        
 
         const player_1 = await rpsContract.j1();
         const player_2 = await rpsContract.j2();
@@ -176,7 +177,7 @@ export const RpsProvider = ({ children }: IProvider) => {
         contractData,
         getContractData,
         player2Move,
-        j2_Timeout
+        j2_Timeout,
       }}
     >
       {children}
