@@ -19,8 +19,8 @@ const CountdownTimer = ({ initialSeconds }: { initialSeconds: number }) => {
   const remainingSeconds = seconds % 60;
 
   return (
-    <div>
-      <h1>Countdown Timer</h1>
+    <div className='mt-8'>
+      <h1 className='font-bold text-3xl'>Countdown Timer</h1>
       <p>
         Time Remaining: {minutes} minutes {remainingSeconds} seconds
       </p>

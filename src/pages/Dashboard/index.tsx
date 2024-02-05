@@ -4,6 +4,7 @@ import { RpsContext } from '../../context';
 import SecureLS from 'secure-ls';
 import useAsyncEffect from 'use-async-effect';
 import CountdownTimer from '../../components/CountdownTimer';
+import { Button, Input, Select } from '../../components';
 
 const Dashboard = () => {
   const {
@@ -90,31 +91,35 @@ const Dashboard = () => {
   }, [contractAddress]);
 
   //console.log(typeof contractData.timeout);
+  console.log(move);
 
   return (
     <div>
+      <p className='font-bold mb-6'>Interact with this app using Metamask on Sepolia Testnet</p>
       {contractData?.player_1 && (
-        <div >
-          <p >P1: {contractData?.player_1}</p>
-          <p>P2: {contractData?.player_2}</p>
+        <div className='mb-8'>
+          <p>Player 1: {contractData?.player_1}</p>
+          <p>Player 2: {contractData?.player_2}</p>
 
-          <p>Amount to stake: {ethers.utils.formatEther(contractData?.stake._hex)}</p>
+          <p>Amount to stake: {ethers.utils.formatEther(contractData?.stake._hex)}ETH</p>
 
           {contractAddress && <div>Contract deployed to: {contractAddress}</div>}
         </div>
       )}
       <form onSubmit={handleSubmit}>
         {!contractData.player_1 && (
-          <p className='font-bold'>You&apos;re the first player, select your move and choose your opponent</p>
+          <p className="font-bold mb-5">
+            You&apos;re the first player, select your move and choose your opponent
+          </p>
         )}
-        <label htmlFor="move">Move:</label>
-        <br />
-        <select
+
+        <Select
+          className="mb-3 md:max-w-[50%]"
           id="move"
           name="move"
           value={move}
+          label="Move:"
           onChange={(e: any) => {
-            console.log(e.target.name);
             setMove(e.target.value);
           }}
         >
@@ -123,23 +128,22 @@ const Dashboard = () => {
           <option value={3}>SCISSORS</option>
           <option value={4}>SPOCK</option>
           <option value={5}>LIZARD</option>
-        </select>
-        <br /> <br /> <br />
+        </Select>
         {!contractData.player_1 && (
-          <div>
-            <label htmlFor="address">Opponent Address: </label>
-            <br />
-            <input
+          <div className="md:max-w-[50%]">
+            <Input
+              className="mb-3"
+              label="Opponent Address:"
               id="address"
               name="address"
               placeholder="Enter opponents address"
               value={matchDetails.address}
               onChange={handleOpponentChange}
             />
-            <br /> <br /> <br />
-            <label htmlFor="stake">Stake: </label>
-            <br />
-            <input
+
+            <Input
+              className="mb-3"
+              label="Stake:"
               id="stake"
               type="number"
               name="stake"
@@ -147,16 +151,15 @@ const Dashboard = () => {
               value={matchDetails.stake}
               onChange={handleOpponentChange}
             />
-            <br />
-            <br />
-            <button>Start game</button>
+
+            <Button>Start game</Button>
           </div>
         )}
       </form>
       {loading && userMessage && <div>{userMessage}</div>}
       {currentAccount === contractData?.player_2 && (
         <div>
-          <button onClick={player2_move}>Player 2</button>
+          <Button onClick={player2_move}>Player 2</Button>
         </div>
       )}{' '}
       {startCountDown && contractData.timeout && (

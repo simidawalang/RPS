@@ -1,17 +1,26 @@
 import React, { ChangeEventHandler } from 'react';
 
-interface ISelectProps {
+interface IInput {
   name?: string;
   id?: string;
   className?: string;
+  type?: string;
   label?: string;
   onChange?: ChangeEventHandler;
   value?: string;
   placeholder?: string;
-  children?: any;
 }
 
-const Input = ({ id, name, className, onChange, value, label, children }: ISelectProps) => {
+const Input = ({
+  id,
+  name,
+  className,
+  type = 'text',
+  onChange,
+  value,
+  label,
+  placeholder,
+}: IInput) => {
   return (
     <div className={className}>
       {label && (
@@ -19,15 +28,15 @@ const Input = ({ id, name, className, onChange, value, label, children }: ISelec
           {label}
         </label>
       )}
-      <select
+      <input
         id={id}
         name={name}
+        type={type}
         className={`border border-gray-400 rounded px-2 py-1 w-full`}
         onChange={onChange}
         value={value}
-      >
-        {children}
-      </select>
+        placeholder={placeholder}
+      />
     </div>
   );
 };
