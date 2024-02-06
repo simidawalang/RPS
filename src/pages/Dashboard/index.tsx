@@ -189,6 +189,7 @@ const Dashboard = () => {
                   className="block mt-2"
                   onClick={() => {
                     ls.remove('contract-address');
+                    setUserMessage('');
                     setContractData({});
                   }}
                 >
