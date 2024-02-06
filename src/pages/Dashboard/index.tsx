@@ -177,23 +177,25 @@ const Dashboard = () => {
             <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
           )}
 
-          {/* After player 2 has made a move */}
-          {contractData?.c1Hash && contractData?.c2 && (
-            <div>
-              <Button onClick={solveGame}>
-                {loading ? 'Loading...' : 'Solve (call this first)'}
-              </Button>
-              <Button
-                className="block mt-2"
-                onClick={() => {
-                  ls.remove('contract-address');
-                  setContractData({});
-                }}
-              >
-                Start New Game
-              </Button>
-            </div>
-          )}
+          {/* After player 2 has made a move. From the contract, only player 1 can call this */}
+          {contractData?.c1Hash &&
+            contractData?.c2 &&
+            currentAccount?.toLowerCase() === contractData?.player_1 && (
+              <div>
+                <Button onClick={solveGame}>
+                  {loading ? 'Loading...' : 'Solve (call this first)'}
+                </Button>
+                <Button
+                  className="block mt-2"
+                  onClick={() => {
+                    ls.remove('contract-address');
+                    setContractData({});
+                  }}
+                >
+                  Start New Game
+                </Button>
+              </div>
+            )}
           {userMessage && <div className="mt-4">{userMessage}</div>}
         </div>
       ) : (
