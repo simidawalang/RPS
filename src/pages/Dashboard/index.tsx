@@ -180,7 +180,7 @@ const Dashboard = () => {
           {/* After player 2 has made a move. From the contract, only player 1 can call this */}
           {contractData?.c1Hash &&
             contractData?.c2 &&
-            currentAccount?.toLowerCase() === contractData?.player_1 && (
+            currentAccount?.toLowerCase() === contractData?.player_1?.toLowerCase() && (
               <div>
                 <Button onClick={solveGame}>
                   {loading ? 'Loading...' : 'Solve (call this first)'}
