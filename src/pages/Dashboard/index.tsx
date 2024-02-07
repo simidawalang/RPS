@@ -173,9 +173,10 @@ const Dashboard = () => {
           </form>
 
           {/* Current account is Player 2 and has not played */}
-          {currentAccount === contractData?.player_2 && !contractData?.c2 && (
-            <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
-          )}
+          {currentAccount?.toLowerCase() === contractData?.player_2?.toLowerCase() &&
+            !contractData?.c2 && (
+              <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
+            )}
 
           {/* After player 2 has made a move. From the contract, only player 1 can call this */}
           {contractData?.c1Hash &&
