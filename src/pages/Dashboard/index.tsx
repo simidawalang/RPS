@@ -5,6 +5,7 @@ import SecureLS from 'secure-ls';
 import CountdownTimer from '../../components/CountdownTimer';
 import { Button, Input, Select } from '../../components';
 import useAsyncEffect from 'use-async-effect';
+import {generateRandomInteger} from '../../utils/helpers';
 
 const Dashboard = () => {
   const {
@@ -46,7 +47,7 @@ const Dashboard = () => {
     setUserMessage('');
     setLoading(true);
     setUserMessage('Generating hash...');
-    const salt = Math.round(Math.random() * 100).toString();
+    const salt = generateRandomInteger();
     const hash = await hasher(move, salt);
 
     if (hash) {

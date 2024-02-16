@@ -41,8 +41,8 @@ const CountdownTimer = ({
   }, [seconds, startCountDown]);
 
   // Format seconds into minutes and seconds
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
+  const minutes = seconds > 0 ? Math.floor(seconds / 60) : 0;
+  const remainingSeconds = seconds > 0 ? Math.floor(seconds % 60) : 0;
 
   return (
     <div className="mt-8">
@@ -57,7 +57,6 @@ const CountdownTimer = ({
             <Button className="mt-3" onClick={timeoutPlayer2}>
               {loading ? 'Loading...' : 'Player 2 Timeout'}
             </Button>
-          
           </div>
         )}
     </div>
