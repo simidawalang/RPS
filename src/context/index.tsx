@@ -17,6 +17,7 @@ export const RpsProvider = ({ children }: IProvider) => {
   const [contractAddress, setContractAddress] = useState(ls.get('contract-address') || '');
   const [contractData, setContractData] = useState<any>({});
   const [isConnected, setIsConnected] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
 
   const connectWallet = async () => {
     try {
@@ -129,6 +130,18 @@ export const RpsProvider = ({ children }: IProvider) => {
     }
   };
 
+  const j1_Timeout = async () => {
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const rpsContract = new Contract(contractAddress, RPS_ABI, signer);
+      const res = await rpsContract.j1Timeout();
+      await res.wait();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const j2_Timeout = async () => {
     try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -190,6 +203,8 @@ export const RpsProvider = ({ children }: IProvider) => {
         setCurrentAccount,
         connectWallet,
         isConnected,
+        gameEnded,
+        setGameEnded,
         setContractData,
         hasher,
         deployRPS,
@@ -197,6 +212,7 @@ export const RpsProvider = ({ children }: IProvider) => {
         contractData,
         getContractData,
         player2Move,
+        j1_Timeout,
         j2_Timeout,
         solve,
       }}

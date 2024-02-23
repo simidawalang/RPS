@@ -5,7 +5,7 @@ import SecureLS from 'secure-ls';
 import CountdownTimer from '../../components/CountdownTimer';
 import { Button, Input, Select } from '../../components';
 import useAsyncEffect from 'use-async-effect';
-import {generateRandomInteger} from '../../utils/helpers';
+import { generateRandomInteger } from '../../utils/helpers';
 
 const Dashboard = () => {
   const {
@@ -18,6 +18,8 @@ const Dashboard = () => {
     player2Move,
     solve,
     setContractData,
+    gameEnded,
+    setGameEnded,
   } = useContext(RpsContext);
   const ls = new SecureLS();
 
@@ -27,7 +29,7 @@ const Dashboard = () => {
     stake: '0',
   });
   const [loading, setLoading] = useState(false);
-  const [move, setMove] = useState('1');
+  const [move, setMove] = useState('0');
   const [userMessage, setUserMessage] = useState('');
 
   const handleOpponentChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -91,12 +93,14 @@ const Dashboard = () => {
     await solve({ move: ls.get('hash-data').move, salt: ls.get('hash-data').salt });
     setUserMessage('Check your balance to see if you won, lost or had a tie');
     setLoading(false);
+    setGameEnded(true);
   };
 
   useAsyncEffect(() => {
     getContractData(contractAddress);
   }, [contractAddress]);
 
+  console.log(contractAddress)
   return (
     <div className="grid gap-10 md:grid-cols-2">
       {currentAccount ? (
@@ -131,6 +135,8 @@ const Dashboard = () => {
                 setMove(e.target.value);
               }}
             >
+              {/* First option corresponds to NULL value. Also, from the contract, player 2 is not alllowed to make a NULL move */}
+              {!contractAddress && <option value={0}>Select a move</option>}
               <option value={1}>ROCK</option>
               <option value={2}>PAPER</option>
               <option value={3}>SCISSORS</option>
@@ -179,24 +185,25 @@ const Dashboard = () => {
               <Button onClick={player2_move}>{loading ? 'Loading...' : 'Player 2 Move'}</Button>
             )}
 
-          {/* After player 2 has made a move. From the contract, only player 1 can call this */}
-          {contractData?.c1Hash &&
+          {/* Player 1 made a valid move, player 2 made a valid move. From the contract, only player 1 can call this */}
+          {ls.get('hash-data').move !== '0' &&
             contractData?.c2 &&
             currentAccount?.toLowerCase() === contractData?.player_1?.toLowerCase() && (
               <div>
-                <Button onClick={solveGame}>
-                  {loading ? 'Loading...' : 'Solve (call this first)'}
-                </Button>
-                <Button
-                  className="block mt-2"
-                  onClick={() => {
-                    ls.remove('contract-address');
-                    setUserMessage('');
-                    setContractData({});
-                  }}
-                >
-                  Start New Game
-                </Button>
+                {!gameEnded ? (
+                  <Button onClick={solveGame}>{loading ? 'Loading...' : 'Solve'}</Button>
+                ) : (
+                  <Button
+                    className="block mt-2"
+                    onClick={() => {
+                      ls.remove('contract-address');
+                      setUserMessage('');
+                      setContractData({});
+                    }}
+                  >
+                    Start New Game
+                  </Button>
+                )}
               </div>
             )}
           {userMessage && <div className="mt-4">{userMessage}</div>}
@@ -205,10 +212,8 @@ const Dashboard = () => {
         <p>Please connect your wallet</p>
       )}
 
-      {/* Show the countdown timer when player 1 has played but player 2 has not */}
-      {contractData.c1Hash && !contractData.c2 && (
-        <CountdownTimer timeoutInterval={Number(contractData.timeout)} />
-      )}
+      {/* Show the countdown timer after player 1 has played */}
+      {contractData.c1Hash && <CountdownTimer timeoutInterval={Number(contractData.timeout)} />}
     </div>
   );
 };
